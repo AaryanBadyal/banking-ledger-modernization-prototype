@@ -6,56 +6,56 @@
 
 @layer base {
   :root {
-    --background: 220 20% 7%;
-    --foreground: 210 20% 92%;
+    --background: 220 20% 97%;
+    --foreground: 220 20% 10%;
 
-    --card: 220 18% 10%;
-    --card-foreground: 210 20% 92%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 10%;
 
-    --popover: 220 18% 10%;
-    --popover-foreground: 210 20% 92%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 10%;
 
-    --primary: 199 89% 48%;
-    --primary-foreground: 220 20% 7%;
+    --primary: 210 90% 42%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 16% 16%;
-    --secondary-foreground: 210 20% 85%;
+    --secondary: 220 16% 93%;
+    --secondary-foreground: 220 20% 25%;
 
-    --muted: 220 14% 14%;
-    --muted-foreground: 215 15% 55%;
+    --muted: 220 14% 94%;
+    --muted-foreground: 215 15% 45%;
 
-    --accent: 165 70% 46%;
-    --accent-foreground: 220 20% 7%;
+    --accent: 165 65% 38%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 72% 55%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 220 14% 18%;
-    --input: 220 14% 18%;
-    --ring: 199 89% 48%;
+    --border: 220 14% 88%;
+    --input: 220 14% 88%;
+    --ring: 210 90% 42%;
 
     --radius: 0.75rem;
 
     /* Custom tokens */
     --warning: 38 92% 50%;
-    --warning-foreground: 220 20% 7%;
-    --success: 165 70% 46%;
-    --success-foreground: 220 20% 7%;
-    --danger: 0 72% 55%;
-    --legacy: 0 72% 55%;
-    --modular: 165 70% 46%;
-    --glow-primary: 199 89% 48%;
-    --glow-accent: 165 70% 46%;
-    --glow-legacy: 0 72% 55%;
+    --warning-foreground: 0 0% 100%;
+    --success: 165 65% 38%;
+    --success-foreground: 0 0% 100%;
+    --danger: 0 72% 50%;
+    --legacy: 0 72% 50%;
+    --modular: 165 65% 38%;
+    --glow-primary: 210 90% 42%;
+    --glow-accent: 165 65% 38%;
+    --glow-legacy: 0 72% 50%;
 
-    --sidebar-background: 220 18% 10%;
-    --sidebar-foreground: 210 20% 85%;
-    --sidebar-primary: 199 89% 48%;
-    --sidebar-primary-foreground: 220 20% 7%;
-    --sidebar-accent: 220 14% 14%;
-    --sidebar-accent-foreground: 210 20% 85%;
-    --sidebar-border: 220 14% 18%;
-    --sidebar-ring: 199 89% 48%;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 220 20% 25%;
+    --sidebar-primary: 210 90% 42%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 94%;
+    --sidebar-accent-foreground: 220 20% 25%;
+    --sidebar-border: 220 14% 88%;
+    --sidebar-ring: 210 90% 42%;
   }
 }
 
@@ -72,19 +72,19 @@
 
 @layer utilities {
   .glow-primary {
-    box-shadow: 0 0 20px -5px hsl(var(--glow-primary) / 0.3);
+    box-shadow: 0 4px 20px -5px hsl(var(--glow-primary) / 0.2);
   }
   .glow-accent {
-    box-shadow: 0 0 20px -5px hsl(var(--glow-accent) / 0.3);
+    box-shadow: 0 4px 20px -5px hsl(var(--glow-accent) / 0.2);
   }
   .glow-legacy {
-    box-shadow: 0 0 20px -5px hsl(var(--glow-legacy) / 0.3);
+    box-shadow: 0 4px 20px -5px hsl(var(--glow-legacy) / 0.15);
   }
   .gradient-mesh {
     background: 
-      radial-gradient(ellipse at 20% 50%, hsl(var(--primary) / 0.08) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 20%, hsl(var(--accent) / 0.06) 0%, transparent 50%),
-      radial-gradient(ellipse at 50% 80%, hsl(var(--primary) / 0.04) 0%, transparent 50%);
+      radial-gradient(ellipse at 20% 50%, hsl(var(--primary) / 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, hsl(var(--accent) / 0.05) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 80%, hsl(var(--primary) / 0.03) 0%, transparent 50%);
   }
   .text-gradient {
     @apply bg-clip-text text-transparent;
