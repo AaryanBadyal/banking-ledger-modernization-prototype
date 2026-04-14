@@ -6,7 +6,7 @@ interface HeroSectionProps {
 
 const HeroSection = ({ onExplore }: HeroSectionProps) => {
   return (
-    <section className="relative min-h-screen flex items-center justify-center gradient-mesh overflow-hidden">
+    <section className="relative min-h-screen flex items-center justify-center gradient-mesh overflow-hidden pt-14">
       {/* Grid pattern overlay */}
       <div className="absolute inset-0 opacity-[0.03]" style={{
         backgroundImage: `linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)`,
