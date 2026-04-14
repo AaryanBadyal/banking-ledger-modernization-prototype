@@ -1,28 +1,35 @@
 import { useRef } from "react";
+import NavBar from "@/components/NavBar";
 import HeroSection from "@/components/HeroSection";
 import ComparisonSection from "@/components/ComparisonSection";
+import LegacyLookSection from "@/components/LegacyLookSection";
 import ArchitectureSection from "@/components/ArchitectureSection";
 import ScenarioSimulator from "@/components/ScenarioSimulator";
 import WhyItMattersSection from "@/components/WhyItMattersSection";
 
 const Index = () => {
-  const contentRef = useRef<HTMLDivElement>(null);
-
   const handleExplore = () => {
-    contentRef.current?.scrollIntoView({ behavior: "smooth" });
+    document.getElementById("comparison")?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <HeroSection onExplore={handleExplore} />
-      <div ref={contentRef}>
+      <NavBar />
+      <div id="hero">
+        <HeroSection onExplore={handleExplore} />
+      </div>
+      <div id="comparison">
         <ComparisonSection />
       </div>
-      <ArchitectureSection />
+      <LegacyLookSection />
+      <div id="architecture">
+        <ArchitectureSection />
+      </div>
       <ScenarioSimulator />
-      <WhyItMattersSection />
+      <div id="why">
+        <WhyItMattersSection />
+      </div>
 
-      {/* Footer */}
       <footer className="py-12 px-6 border-t border-border">
         <div className="max-w-6xl mx-auto text-center">
           <p className="text-sm text-muted-foreground">
