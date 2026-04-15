@@ -170,7 +170,7 @@ const ScenarioSimulator = () => {
       setTimeout(() => {
         setVisibleSteps(i);
         if (i === totalSteps) setRunning(false);
-      }, i * 600);
+      }, i * 1200);
     }
   };
 
