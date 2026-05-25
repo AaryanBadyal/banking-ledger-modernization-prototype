@@ -509,6 +509,13 @@ const CenterCanvas = ({
         </div>
       </div>
 
+      {/* Guide banner */}
+      <div className="absolute top-9 left-0 right-0 px-4 z-10">
+        <div className="mx-auto max-w-2xl rounded-md border border-sky-500/20 bg-sky-500/5 px-3 py-1.5 text-[10.5px] text-sky-200/90 text-center font-mono">
+          To test: select <span className="text-red-300">Legacy Mode</span> and trigger an event, then switch to <span className="text-teal-300">Modular Mode</span> to see the architectural defense.
+        </div>
+      </div>
+
       {/* SVG layer */}
       <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
         <defs>
@@ -574,6 +581,34 @@ const CenterCanvas = ({
             </g>
           );
         })}
+
+        {/* Gateway → service edges (modular only) */}
+        {mode === "modular" &&
+          GATEWAY_EDGES.map((target, i) => {
+            const pa = GATEWAY_POS;
+            const pb = positions[target];
+            const isLit = pulseIdx >= 0 && pulsePath[pulseIdx] === target;
+            const d = `M ${pa.x} ${pa.y} L ${pb.x} ${pb.y}`;
+            return (
+              <g key={`gw-${i}`}>
+                <path
+                  d={d}
+                  fill="none"
+                  stroke={isLit ? "rgb(74 222 128)" : "rgb(45 212 191)"}
+                  strokeWidth={isLit ? 0.7 : 0.4}
+                  strokeDasharray={isLit ? "none" : "1.2 1"}
+                  opacity={isLit ? 1 : 0.4}
+                  style={{ transition: "stroke 0.25s, opacity 0.25s, stroke-width 0.25s" }}
+                  markerEnd={isLit ? "url(#arrow-active)" : "url(#arrow-modular)"}
+                />
+                {isLit && (
+                  <circle r="0.9" fill="rgb(134 239 172)">
+                    <animateMotion dur="0.6s" repeatCount="1" path={d} />
+                  </circle>
+                )}
+              </g>
+            );
+          })}
       </svg>
 
       {/* Monolith container (legacy only) */}
@@ -593,6 +628,34 @@ const CenterCanvas = ({
         >
           <div className="absolute -top-2.5 left-4 px-2 bg-[hsl(222_34%_8%)] text-[9px] uppercase tracking-[0.2em] text-slate-500 font-mono">
             COBOL Monolith Core · v3.2
+          </div>
+        </div>
+      )}
+
+      {/* API Gateway node (modular only) */}
+      {mode === "modular" && (
+        <div
+          className="absolute -translate-x-1/2 -translate-y-1/2"
+          style={{ left: `${GATEWAY_POS.x}%`, top: `${GATEWAY_POS.y}%` }}
+        >
+          <div className="relative w-[160px] rounded-lg bg-gradient-to-br from-sky-500/15 to-teal-500/10 border border-sky-400/50 shadow-[0_0_30px_-6px_rgb(56_189_248/0.5)] px-3 py-2.5">
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-1.5">
+                <span className="w-5 h-5 rounded bg-sky-500/20 flex items-center justify-center">
+                  <Network className="w-3 h-3 text-sky-200" />
+                </span>
+                <span className="text-[9px] font-mono uppercase tracking-wider text-sky-300/80">
+                  GW
+                </span>
+              </div>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgb(74_222_128/0.8)] animate-pulse" />
+            </div>
+            <div className="text-[12px] font-semibold text-slate-100 leading-tight">
+              API Gateway
+            </div>
+            <div className="text-[9.5px] text-sky-300/70 font-mono mt-0.5">
+              routes · auth · rate-limit
+            </div>
           </div>
         </div>
       )}
