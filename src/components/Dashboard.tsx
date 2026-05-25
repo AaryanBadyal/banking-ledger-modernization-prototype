@@ -12,6 +12,8 @@ import {
   Wallet,
   XCircle,
   Zap,
+  Network,
+  TrendingUp,
 } from "lucide-react";
 
 type Mode = "legacy" | "modular";
@@ -78,11 +80,14 @@ const MODULES: ModuleDef[] = [
 
 // Node positions in % within the SVG canvas
 const POS_MODULAR: Record<ModuleId, { x: number; y: number }> = {
-  payments: { x: 28, y: 26 },
-  fraud: { x: 72, y: 26 },
-  accounts: { x: 28, y: 74 },
-  notifications: { x: 72, y: 74 },
+  payments: { x: 22, y: 60 },
+  fraud: { x: 41, y: 78 },
+  accounts: { x: 60, y: 78 },
+  notifications: { x: 78, y: 60 },
 };
+
+// API Gateway position (modular only)
+const GATEWAY_POS = { x: 50, y: 28 };
 
 const POS_LEGACY: Record<ModuleId, { x: number; y: number }> = {
   payments: { x: 40, y: 40 },
@@ -91,13 +96,9 @@ const POS_LEGACY: Record<ModuleId, { x: number; y: number }> = {
   notifications: { x: 58, y: 58 },
 };
 
-// Modular: clean directional API edges
-const MODULAR_EDGES: [ModuleId, ModuleId][] = [
-  ["payments", "fraud"],
-  ["fraud", "accounts"],
-  ["accounts", "notifications"],
-  ["payments", "accounts"],
-];
+// Modular: API Gateway routes to every service
+const MODULAR_EDGES: [ModuleId, ModuleId][] = [];
+const GATEWAY_EDGES: ModuleId[] = ["payments", "fraud", "accounts", "notifications"];
 
 // Legacy: tangled mesh — every node to every node
 const LEGACY_EDGES: [ModuleId, ModuleId][] = [
@@ -112,7 +113,7 @@ const LEGACY_EDGES: [ModuleId, ModuleId][] = [
   ["fraud", "notifications"],
 ];
 
-type Scenario = "send" | "update" | "failure";
+type Scenario = "traffic" | "update";
 
 interface ScenarioConfig {
   id: Scenario;
@@ -121,9 +122,8 @@ interface ScenarioConfig {
 }
 
 const SCENARIOS: ScenarioConfig[] = [
-  { id: "send", name: "Send $100", icon: Send },
-  { id: "update", name: "Update Payment System", icon: RefreshCw },
-  { id: "failure", name: "Simulate System Failure", icon: Zap },
+  { id: "traffic", name: "Scenario 1: Black Friday Traffic Spike", icon: TrendingUp },
+  { id: "update", name: "Scenario 2: Mid-Day Code Update", icon: RefreshCw },
 ];
 
 interface LogEntry {
@@ -202,86 +202,75 @@ const Dashboard = () => {
   };
 
   const runModular = (s: Scenario) => {
-    if (s === "send") {
+    if (s === "traffic") {
+      addLog("INFO", "Black Friday: 12,400 req/s arriving at API Gateway.");
+      schedule(400, () => addLog("INFO", "Gateway auto-scaling Payments + Fraud horizontally..."));
+      // smooth parallel pulses across all 4 services
       const path: ModuleId[] = ["payments", "fraud", "accounts", "notifications"];
       setPulsePath(path);
-      addLog("INFO", "POST /payments/transfer { amount: 100.00 }");
       path.forEach((_, i) => {
-        schedule(i * 900 + 200, () => setPulseIdx(i));
-        schedule(i * 900 + 700, () => {
-          const node = path[i];
-          if (node === "fraud") addLog("OK", "Fraud service: risk=0.04 → approved.");
-          if (node === "accounts") addLog("OK", "Accounts: debit $100 committed to ledger.");
-          if (node === "notifications") addLog("OK", "Notifications: push + email dispatched.");
-        });
+        schedule(i * 700 + 600, () => setPulseIdx(i));
       });
-      schedule(path.length * 900 + 600, () => {
-        setPulseIdx(-1);
-        addLog("OK", "Transfer complete. Latency 412ms. All services stable.");
-      });
+      schedule(1200, () => addLog("OK", "Payments service scaled to 14 replicas. Latency stable."));
+      schedule(2000, () => addLog("OK", "Fraud + Accounts handling load in parallel."));
+      schedule(2800, () => addLog("OK", "All services 200 OK. Throughput: 12.4k rps. Zero errors."));
+      schedule(3400, () => setPulseIdx(-1));
     }
     if (s === "update") {
       addLog("INFO", "Deploying payments-service:v2.4.1 via blue/green...");
-      schedule(900, () => setHealth((h) => ({ ...h, payments: "warn" })));
-      schedule(900, () => addLog("INFO", "Payments draining connections..."));
-      schedule(2000, () => addLog("OK", "Payments v2.4.1 healthy. Traffic shifted."));
-      schedule(2000, () => setHealth((h) => ({ ...h, payments: "ok" })));
-      schedule(2600, () =>
-        addLog("OK", "Zero impact on Fraud, Accounts, Notifications. API contract preserved.")
+      schedule(700, () => setHealth((h) => ({ ...h, payments: "down" })));
+      schedule(800, () =>
+        addLog("WARN", "Payments node taken offline for canary swap.")
       );
-    }
-    if (s === "failure") {
-      addLog("CRITICAL", "Payments service crashed. PID 4711 terminated.");
-      setHealth((h) => ({ ...h, payments: "down" }));
-      schedule(700, () =>
-        addLog("WARN", "Payments service down. Fault isolated via API Gateway.")
+      schedule(1600, () =>
+        addLog("INFO", "[INFO] Fault isolated by API Gateway. Blast radius: ISOLATED. Zero customer downtime.")
       );
-      schedule(1400, () =>
-        addLog("OK", "Core architecture stable. Accounts & Notifications operational.")
+      schedule(2400, () => setHealth((h) => ({ ...h, payments: "ok" })));
+      schedule(2500, () => addLog("OK", "Payments v2.4.1 healthy. Traffic restored."));
+      schedule(3100, () =>
+        addLog("OK", "Fraud, Accounts, Notifications unaffected throughout deploy.")
       );
-      schedule(2100, () => addLog("INFO", "Circuit breaker open. Auto-restart in 30s."));
     }
   };
 
   const runLegacy = (s: Scenario) => {
-    if (s === "send") {
-      addLog("INFO", "EXEC PROC TRANSFER_AMT(100.00)...");
-      // chaotic flickering edges
+    if (s === "traffic") {
+      addLog("INFO", "Black Friday: 12,400 req/s hitting COBOL_MONOLITH_v3.2.");
+      // monolith bogs down — flickering tangled edges
       let i = 0;
       const flick = () => {
         setActiveEdge(Math.floor(Math.random() * LEGACY_EDGES.length));
         i++;
-        if (i < 10) schedule(220, flick);
-        else {
-          setActiveEdge(null);
-          addLog("WARN", "Fraud check delayed — shared thread with Accounts.");
-          schedule(500, () =>
-            addLog("WARN", "Notification queue blocked behind ledger lock.")
-          );
-          schedule(1100, () =>
-            addLog("CRITICAL", "Transfer timeout after 8.4s. Partial state committed.")
-          );
-          setHealth({ payments: "warn", fraud: "warn", accounts: "warn", notifications: "down" });
-        }
+        if (i < 12) schedule(260, flick);
       };
       flick();
-    }
-    if (s === "update" || s === "failure") {
-      const verb = s === "update" ? "Updating Payments" : "Payments process killed";
-      addLog(
-        "CRITICAL",
-        `Tight coupling error: ${verb} disrupted Notifications and froze Account balances. System-wide crash.`
+      schedule(700, () => setHealth((h) => ({ ...h, payments: "warn" })));
+      schedule(900, () => addLog("WARN", "Shared memory pool at 94%. Thread contention rising."));
+      schedule(1400, () => setHealth((h) => ({ ...h, fraud: "warn", accounts: "warn" })));
+      schedule(1600, () => addLog("WARN", "Fraud + Accounts threads starved waiting on shared locks."));
+      schedule(2400, () => setHealth((h) => ({ payments: "warn", fraud: "warn", accounts: "warn", notifications: "down" })));
+      schedule(2500, () =>
+        addLog("CRITICAL", "Notifications queue overflowed shared memory. Service unresponsive.")
       );
-      setMonolithAlarm(true);
-      setHealth({
-        payments: "down",
-        fraud: "down",
-        accounts: "down",
-        notifications: "down",
+      schedule(3200, () => {
+        setActiveEdge(null);
+        addLog("WARN", "Monolith degraded. Cannot scale individual modules.");
       });
-      schedule(900, () => addLog("CRITICAL", "COBOL_MONOLITH_v3.2: SIGSEGV in shared memory segment."));
-      schedule(1600, () => addLog("CRITICAL", "All 4 modules unresponsive. Failover unavailable."));
-      schedule(2400, () => addLog("WARN", "Manual rollback required. ETA 45 minutes."));
+    }
+    if (s === "update") {
+      addLog("INFO", "Hot-patching Payments module in COBOL_MONOLITH_v3.2...");
+      schedule(500, () => setMonolithAlarm(true));
+      schedule(600, () =>
+        setHealth({ payments: "down", fraud: "down", accounts: "down", notifications: "down" })
+      );
+      schedule(700, () =>
+        addLog("CRITICAL", "[CRITICAL] Global system outage. Blast radius: GLOBAL. Bet-the-bank risk realized.")
+      );
+      schedule(1500, () =>
+        addLog("CRITICAL", "COBOL_MONOLITH_v3.2: SIGSEGV in shared memory segment.")
+      );
+      schedule(2300, () => addLog("CRITICAL", "All 4 modules unresponsive. Failover unavailable."));
+      schedule(3100, () => addLog("WARN", "Manual rollback required. ETA 45 minutes."));
     }
   };
 
