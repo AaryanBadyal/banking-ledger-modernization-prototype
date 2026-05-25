@@ -7,11 +7,9 @@ import {
   CreditCard,
   Layers,
   RefreshCw,
-  Send,
   Shield,
   Wallet,
   XCircle,
-  Zap,
   Network,
   TrendingUp,
 } from "lucide-react";
@@ -118,7 +116,7 @@ type Scenario = "traffic" | "update";
 interface ScenarioConfig {
   id: Scenario;
   name: string;
-  icon: typeof Send;
+  icon: typeof RefreshCw;
 }
 
 const SCENARIOS: ScenarioConfig[] = [
