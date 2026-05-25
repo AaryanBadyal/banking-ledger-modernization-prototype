@@ -7,11 +7,11 @@ import {
   CreditCard,
   Layers,
   RefreshCw,
-  Send,
   Shield,
   Wallet,
   XCircle,
-  Zap,
+  Network,
+  TrendingUp,
 } from "lucide-react";
 
 type Mode = "legacy" | "modular";
@@ -78,11 +78,14 @@ const MODULES: ModuleDef[] = [
 
 // Node positions in % within the SVG canvas
 const POS_MODULAR: Record<ModuleId, { x: number; y: number }> = {
-  payments: { x: 28, y: 26 },
-  fraud: { x: 72, y: 26 },
-  accounts: { x: 28, y: 74 },
-  notifications: { x: 72, y: 74 },
+  payments: { x: 22, y: 60 },
+  fraud: { x: 41, y: 78 },
+  accounts: { x: 60, y: 78 },
+  notifications: { x: 78, y: 60 },
 };
+
+// API Gateway position (modular only)
+const GATEWAY_POS = { x: 50, y: 28 };
 
 const POS_LEGACY: Record<ModuleId, { x: number; y: number }> = {
   payments: { x: 40, y: 40 },
@@ -91,13 +94,9 @@ const POS_LEGACY: Record<ModuleId, { x: number; y: number }> = {
   notifications: { x: 58, y: 58 },
 };
 
-// Modular: clean directional API edges
-const MODULAR_EDGES: [ModuleId, ModuleId][] = [
-  ["payments", "fraud"],
-  ["fraud", "accounts"],
-  ["accounts", "notifications"],
-  ["payments", "accounts"],
-];
+// Modular: API Gateway routes to every service
+const MODULAR_EDGES: [ModuleId, ModuleId][] = [];
+const GATEWAY_EDGES: ModuleId[] = ["payments", "fraud", "accounts", "notifications"];
 
 // Legacy: tangled mesh — every node to every node
 const LEGACY_EDGES: [ModuleId, ModuleId][] = [
@@ -112,18 +111,17 @@ const LEGACY_EDGES: [ModuleId, ModuleId][] = [
   ["fraud", "notifications"],
 ];
 
-type Scenario = "send" | "update" | "failure";
+type Scenario = "traffic" | "update";
 
 interface ScenarioConfig {
   id: Scenario;
   name: string;
-  icon: typeof Send;
+  icon: typeof RefreshCw;
 }
 
 const SCENARIOS: ScenarioConfig[] = [
-  { id: "send", name: "Send $100", icon: Send },
-  { id: "update", name: "Update Payment System", icon: RefreshCw },
-  { id: "failure", name: "Simulate System Failure", icon: Zap },
+  { id: "traffic", name: "Scenario 1: Black Friday Traffic Spike", icon: TrendingUp },
+  { id: "update", name: "Scenario 2: Mid-Day Code Update", icon: RefreshCw },
 ];
 
 interface LogEntry {
@@ -202,86 +200,75 @@ const Dashboard = () => {
   };
 
   const runModular = (s: Scenario) => {
-    if (s === "send") {
+    if (s === "traffic") {
+      addLog("INFO", "Black Friday: 12,400 req/s arriving at API Gateway.");
+      schedule(400, () => addLog("INFO", "Gateway auto-scaling Payments + Fraud horizontally..."));
+      // smooth parallel pulses across all 4 services
       const path: ModuleId[] = ["payments", "fraud", "accounts", "notifications"];
       setPulsePath(path);
-      addLog("INFO", "POST /payments/transfer { amount: 100.00 }");
       path.forEach((_, i) => {
-        schedule(i * 900 + 200, () => setPulseIdx(i));
-        schedule(i * 900 + 700, () => {
-          const node = path[i];
-          if (node === "fraud") addLog("OK", "Fraud service: risk=0.04 → approved.");
-          if (node === "accounts") addLog("OK", "Accounts: debit $100 committed to ledger.");
-          if (node === "notifications") addLog("OK", "Notifications: push + email dispatched.");
-        });
+        schedule(i * 700 + 600, () => setPulseIdx(i));
       });
-      schedule(path.length * 900 + 600, () => {
-        setPulseIdx(-1);
-        addLog("OK", "Transfer complete. Latency 412ms. All services stable.");
-      });
+      schedule(1200, () => addLog("OK", "Payments service scaled to 14 replicas. Latency stable."));
+      schedule(2000, () => addLog("OK", "Fraud + Accounts handling load in parallel."));
+      schedule(2800, () => addLog("OK", "All services 200 OK. Throughput: 12.4k rps. Zero errors."));
+      schedule(3400, () => setPulseIdx(-1));
     }
     if (s === "update") {
       addLog("INFO", "Deploying payments-service:v2.4.1 via blue/green...");
-      schedule(900, () => setHealth((h) => ({ ...h, payments: "warn" })));
-      schedule(900, () => addLog("INFO", "Payments draining connections..."));
-      schedule(2000, () => addLog("OK", "Payments v2.4.1 healthy. Traffic shifted."));
-      schedule(2000, () => setHealth((h) => ({ ...h, payments: "ok" })));
-      schedule(2600, () =>
-        addLog("OK", "Zero impact on Fraud, Accounts, Notifications. API contract preserved.")
+      schedule(700, () => setHealth((h) => ({ ...h, payments: "down" })));
+      schedule(800, () =>
+        addLog("WARN", "Payments node taken offline for canary swap.")
       );
-    }
-    if (s === "failure") {
-      addLog("CRITICAL", "Payments service crashed. PID 4711 terminated.");
-      setHealth((h) => ({ ...h, payments: "down" }));
-      schedule(700, () =>
-        addLog("WARN", "Payments service down. Fault isolated via API Gateway.")
+      schedule(1600, () =>
+        addLog("INFO", "[INFO] Fault isolated by API Gateway. Blast radius: ISOLATED. Zero customer downtime.")
       );
-      schedule(1400, () =>
-        addLog("OK", "Core architecture stable. Accounts & Notifications operational.")
+      schedule(2400, () => setHealth((h) => ({ ...h, payments: "ok" })));
+      schedule(2500, () => addLog("OK", "Payments v2.4.1 healthy. Traffic restored."));
+      schedule(3100, () =>
+        addLog("OK", "Fraud, Accounts, Notifications unaffected throughout deploy.")
       );
-      schedule(2100, () => addLog("INFO", "Circuit breaker open. Auto-restart in 30s."));
     }
   };
 
   const runLegacy = (s: Scenario) => {
-    if (s === "send") {
-      addLog("INFO", "EXEC PROC TRANSFER_AMT(100.00)...");
-      // chaotic flickering edges
+    if (s === "traffic") {
+      addLog("INFO", "Black Friday: 12,400 req/s hitting COBOL_MONOLITH_v3.2.");
+      // monolith bogs down — flickering tangled edges
       let i = 0;
       const flick = () => {
         setActiveEdge(Math.floor(Math.random() * LEGACY_EDGES.length));
         i++;
-        if (i < 10) schedule(220, flick);
-        else {
-          setActiveEdge(null);
-          addLog("WARN", "Fraud check delayed — shared thread with Accounts.");
-          schedule(500, () =>
-            addLog("WARN", "Notification queue blocked behind ledger lock.")
-          );
-          schedule(1100, () =>
-            addLog("CRITICAL", "Transfer timeout after 8.4s. Partial state committed.")
-          );
-          setHealth({ payments: "warn", fraud: "warn", accounts: "warn", notifications: "down" });
-        }
+        if (i < 12) schedule(260, flick);
       };
       flick();
-    }
-    if (s === "update" || s === "failure") {
-      const verb = s === "update" ? "Updating Payments" : "Payments process killed";
-      addLog(
-        "CRITICAL",
-        `Tight coupling error: ${verb} disrupted Notifications and froze Account balances. System-wide crash.`
+      schedule(700, () => setHealth((h) => ({ ...h, payments: "warn" })));
+      schedule(900, () => addLog("WARN", "Shared memory pool at 94%. Thread contention rising."));
+      schedule(1400, () => setHealth((h) => ({ ...h, fraud: "warn", accounts: "warn" })));
+      schedule(1600, () => addLog("WARN", "Fraud + Accounts threads starved waiting on shared locks."));
+      schedule(2400, () => setHealth((h) => ({ payments: "warn", fraud: "warn", accounts: "warn", notifications: "down" })));
+      schedule(2500, () =>
+        addLog("CRITICAL", "Notifications queue overflowed shared memory. Service unresponsive.")
       );
-      setMonolithAlarm(true);
-      setHealth({
-        payments: "down",
-        fraud: "down",
-        accounts: "down",
-        notifications: "down",
+      schedule(3200, () => {
+        setActiveEdge(null);
+        addLog("WARN", "Monolith degraded. Cannot scale individual modules.");
       });
-      schedule(900, () => addLog("CRITICAL", "COBOL_MONOLITH_v3.2: SIGSEGV in shared memory segment."));
-      schedule(1600, () => addLog("CRITICAL", "All 4 modules unresponsive. Failover unavailable."));
-      schedule(2400, () => addLog("WARN", "Manual rollback required. ETA 45 minutes."));
+    }
+    if (s === "update") {
+      addLog("INFO", "Hot-patching Payments module in COBOL_MONOLITH_v3.2...");
+      schedule(500, () => setMonolithAlarm(true));
+      schedule(600, () =>
+        setHealth({ payments: "down", fraud: "down", accounts: "down", notifications: "down" })
+      );
+      schedule(700, () =>
+        addLog("CRITICAL", "[CRITICAL] Global system outage. Blast radius: GLOBAL. Bet-the-bank risk realized.")
+      );
+      schedule(1500, () =>
+        addLog("CRITICAL", "COBOL_MONOLITH_v3.2: SIGSEGV in shared memory segment.")
+      );
+      schedule(2300, () => addLog("CRITICAL", "All 4 modules unresponsive. Failover unavailable."));
+      schedule(3100, () => addLog("WARN", "Manual rollback required. ETA 45 minutes."));
     }
   };
 
@@ -520,6 +507,13 @@ const CenterCanvas = ({
         </div>
       </div>
 
+      {/* Guide banner */}
+      <div className="absolute top-9 left-0 right-0 px-4 z-10">
+        <div className="mx-auto max-w-2xl rounded-md border border-sky-500/20 bg-sky-500/5 px-3 py-1.5 text-[10.5px] text-sky-200/90 text-center font-mono">
+          To test: select <span className="text-red-300">Legacy Mode</span> and trigger an event, then switch to <span className="text-teal-300">Modular Mode</span> to see the architectural defense.
+        </div>
+      </div>
+
       {/* SVG layer */}
       <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
         <defs>
@@ -585,6 +579,34 @@ const CenterCanvas = ({
             </g>
           );
         })}
+
+        {/* Gateway → service edges (modular only) */}
+        {mode === "modular" &&
+          GATEWAY_EDGES.map((target, i) => {
+            const pa = GATEWAY_POS;
+            const pb = positions[target];
+            const isLit = pulseIdx >= 0 && pulsePath[pulseIdx] === target;
+            const d = `M ${pa.x} ${pa.y} L ${pb.x} ${pb.y}`;
+            return (
+              <g key={`gw-${i}`}>
+                <path
+                  d={d}
+                  fill="none"
+                  stroke={isLit ? "rgb(74 222 128)" : "rgb(45 212 191)"}
+                  strokeWidth={isLit ? 0.7 : 0.4}
+                  strokeDasharray={isLit ? "none" : "1.2 1"}
+                  opacity={isLit ? 1 : 0.4}
+                  style={{ transition: "stroke 0.25s, opacity 0.25s, stroke-width 0.25s" }}
+                  markerEnd={isLit ? "url(#arrow-active)" : "url(#arrow-modular)"}
+                />
+                {isLit && (
+                  <circle r="0.9" fill="rgb(134 239 172)">
+                    <animateMotion dur="0.6s" repeatCount="1" path={d} />
+                  </circle>
+                )}
+              </g>
+            );
+          })}
       </svg>
 
       {/* Monolith container (legacy only) */}
@@ -604,6 +626,34 @@ const CenterCanvas = ({
         >
           <div className="absolute -top-2.5 left-4 px-2 bg-[hsl(222_34%_8%)] text-[9px] uppercase tracking-[0.2em] text-slate-500 font-mono">
             COBOL Monolith Core · v3.2
+          </div>
+        </div>
+      )}
+
+      {/* API Gateway node (modular only) */}
+      {mode === "modular" && (
+        <div
+          className="absolute -translate-x-1/2 -translate-y-1/2"
+          style={{ left: `${GATEWAY_POS.x}%`, top: `${GATEWAY_POS.y}%` }}
+        >
+          <div className="relative w-[160px] rounded-lg bg-gradient-to-br from-sky-500/15 to-teal-500/10 border border-sky-400/50 shadow-[0_0_30px_-6px_rgb(56_189_248/0.5)] px-3 py-2.5">
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-1.5">
+                <span className="w-5 h-5 rounded bg-sky-500/20 flex items-center justify-center">
+                  <Network className="w-3 h-3 text-sky-200" />
+                </span>
+                <span className="text-[9px] font-mono uppercase tracking-wider text-sky-300/80">
+                  GW
+                </span>
+              </div>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgb(74_222_128/0.8)] animate-pulse" />
+            </div>
+            <div className="text-[12px] font-semibold text-slate-100 leading-tight">
+              API Gateway
+            </div>
+            <div className="text-[9.5px] text-sky-300/70 font-mono mt-0.5">
+              routes · auth · rate-limit
+            </div>
           </div>
         </div>
       )}
