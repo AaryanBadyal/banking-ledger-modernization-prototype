@@ -523,6 +523,15 @@ const CenterCanvas = ({
           <marker id="arrow-active" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
             <path d="M0,0 L10,5 L0,10 z" fill="rgb(74 222 128)" />
           </marker>
+          <radialGradient id="pulse-grad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="rgb(167 243 208)" stopOpacity="1" />
+            <stop offset="60%" stopColor="rgb(74 222 128)" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="rgb(45 212 191)" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="pulse-grad-legacy" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="rgb(251 191 36)" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="rgb(248 113 113)" stopOpacity="0" />
+          </radialGradient>
         </defs>
 
         {/* Edges */}
