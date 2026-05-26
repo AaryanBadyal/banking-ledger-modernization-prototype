@@ -523,6 +523,15 @@ const CenterCanvas = ({
           <marker id="arrow-active" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
             <path d="M0,0 L10,5 L0,10 z" fill="rgb(74 222 128)" />
           </marker>
+          <radialGradient id="pulse-grad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="rgb(167 243 208)" stopOpacity="1" />
+            <stop offset="60%" stopColor="rgb(74 222 128)" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="rgb(45 212 191)" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="pulse-grad-legacy" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="rgb(251 191 36)" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="rgb(248 113 113)" stopOpacity="0" />
+          </radialGradient>
         </defs>
 
         {/* Edges */}
@@ -599,12 +608,43 @@ const CenterCanvas = ({
                   style={{ transition: "stroke 0.25s, opacity 0.25s, stroke-width 0.25s" }}
                   markerEnd={isLit ? "url(#arrow-active)" : "url(#arrow-modular)"}
                 />
+                {/* Ambient continuous data flow */}
+                <circle r="0.55" fill="url(#pulse-grad)" opacity="0.9">
+                  <animateMotion dur={`${2 + i * 0.35}s`} repeatCount="indefinite" path={d} begin={`${i * 0.5}s`} />
+                </circle>
+                <circle r="0.35" fill="rgb(186 230 253)" opacity="0.7">
+                  <animateMotion dur={`${2.8 + i * 0.25}s`} repeatCount="indefinite" path={d} begin={`${i * 0.5 + 1.2}s`} />
+                </circle>
                 {isLit && (
                   <circle r="0.9" fill="rgb(134 239 172)">
                     <animateMotion dur="0.6s" repeatCount="1" path={d} />
                   </circle>
                 )}
               </g>
+            );
+          })}
+
+        {/* Ambient chaotic flow on legacy monolith edges */}
+        {mode === "legacy" &&
+          edges.map(([a, b], i) => {
+            if (i > 5) return null;
+            const pa = positions[a];
+            const pb = positions[b];
+            const mx = (pa.x + pb.x) / 2;
+            const my = (pa.y + pb.y) / 2;
+            const dx = pb.x - pa.x;
+            const dy = pb.y - pa.y;
+            const len = Math.hypot(dx, dy) || 1;
+            const nx = -dy / len;
+            const ny = dx / len;
+            const off = (i % 2 === 0 ? 6 : -6) + (i * 1.5 - 4);
+            const cx = mx + nx * off;
+            const cy = my + ny * off;
+            const d = `M ${pa.x} ${pa.y} Q ${cx} ${cy} ${pb.x} ${pb.y}`;
+            return (
+              <circle key={`legacy-flow-${i}`} r="0.4" fill="url(#pulse-grad-legacy)" opacity="0.55">
+                <animateMotion dur={`${4 + i * 0.4}s`} repeatCount="indefinite" path={d} begin={`${i * 0.7}s`} />
+              </circle>
             );
           })}
       </svg>
