@@ -1,4 +1,5 @@
 # Banking Ledger Modernization Prototype
+![Prototype Preview](banking-prototype-preview.png)
 
 [📖 Read the Full Article] https://medium.com/@aaryan17.badyal/from-game-loops-to-core-ledgers-re-engineering-banking-with-game-engine-architecture-1e583c1bbe40?sharedUserId=aaryan17.badyal
 
