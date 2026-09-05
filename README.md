@@ -1,9 +1,9 @@
 # Banking Ledger Modernization Prototype
 ![Prototype Preview](banking-prototype-preview.png)
 
-[📖 Read the Full Article] https://medium.com/@aaryan17.badyal/from-game-loops-to-core-ledgers-re-engineering-banking-with-game-engine-architecture-1e583c1bbe40?sharedUserId=aaryan17.badyal
+[Read the Full Article] https://medium.com/@aaryan17.badyal/from-game-loops-to-core-ledgers-re-engineering-banking-with-game-engine-architecture-1e583c1bbe40?sharedUserId=aaryan17.badyal
 
-A high-performance prototype demonstrating an event-driven, node-based core banking architecture designed to replace legacy batch-processing infrastructure with real-time, fault-tolerant transaction processing.
+A high-performance prototype which demonstrates an event-driven, node-based core banking architecture designed to replace legacy batch-processing infrastructure with real-time, fault-tolerant transaction processing.
 
 ---
 
